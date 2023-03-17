@@ -1,0 +1,135 @@
+/*Telephone Number Validator
+Return true if the passed string looks like a valid US phone number.
+
+The user may fill out the form field any way they choose as long as it has the format of a valid US number. 
+The following are examples of valid formats for US numbers (refer to the tests below for other variants):
+
+555-555-5555
+(555)555-5555
+(555) 555-5555
+555 555 5555
+5555555555
+1 555 555 5555
+For this challenge you will be presented with a string such as 800-692-7753 or 8oo-six427676;laskdjf. 
+Your job is to validate or reject the US phone number based on any combination of the formats provided above. 
+The area code is required. If the country code is provided, you must confirm that the country code is 1. 
+Return true if the string is a valid US phone number; otherwise return false.
+
+Tests
+Passed:telephoneCheck("555-555-5555") should return a boolean.
+Passed:telephoneCheck("1 555-555-5555") should return true.
+Passed:telephoneCheck("1 (555) 555-5555") should return true.
+Passed:telephoneCheck("5555555555") should return true.
+Passed:telephoneCheck("555-555-5555") should return true.
+Passed:telephoneCheck("(555)555-5555") should return true.
+Passed:telephoneCheck("1(555)555-5555") should return true.
+Passed:telephoneCheck("555-5555") should return false.
+Passed:telephoneCheck("5555555") should return false.
+Passed:telephoneCheck("1 555)555-5555") should return false.
+Passed:telephoneCheck("1 555 555 5555") should return true.
+Passed:telephoneCheck("1 456 789 4444") should return true.
+Passed:telephoneCheck("123**&!!asdf#") should return false.
+Passed:telephoneCheck("55555555") should return false.
+Passed:telephoneCheck("(6054756961)") should return false.
+Passed:telephoneCheck("2 (757) 622-7382") should return false.
+Passed:telephoneCheck("0 (757) 622-7382") should return false.
+Passed:telephoneCheck("-1 (757) 622-7382") should return false.
+Passed:telephoneCheck("2 757 622-7382") should return false.
+Passed:telephoneCheck("10 (757) 622-7382") should return false.
+Passed:telephoneCheck("27576227382") should return false.
+Passed:telephoneCheck("(275)76227382") should return false.
+Passed:telephoneCheck("2(757)6227382") should return false.
+Passed:telephoneCheck("2(757)622-7382") should return false.
+Passed:telephoneCheck("555)-555-5555") should return false.
+Passed:telephoneCheck("(555-555-5555") should return false.
+Passed:telephoneCheck("(555)5(55?)-5555") should return false.
+Passed:telephoneCheck("55 55-55-555-5") should return false.
+Failed:telephoneCheck("11 555-555-5555") should return false.
+
+*/
+
+const PHONE_CHARS = [
+  '(',')','-'
+];
+
+//Valid US Numbers Start with 1
+//Valid US Numbers are 10 or 11 digits long
+function telephoneCheck(str) {
+  str = str.replace(/\s/gi,'').split("");
+
+
+  if(str.length < 10 || str.length > 14)
+  {
+    return false;
+  }
+  else if(str.length == 10)
+  {
+    //Must be all numbers no leading 1 considered
+    console.log(10);
+    return str.every(x => parseInt(x));
+  }
+  else if(str.length == 11)
+  {
+    //Must be all numbers with leading 1 considered
+    console.log(11);
+    console.log(str);
+    return parseInt(str[0])===1 && telephoneCheck(str.splice(1,10).join(""));
+  }
+  else if(str.length == 12)
+  {
+    //Must be all numbers no leading 1 considered
+    //must have xxx-xxx-xxxx or (xxx)xxx xxxx
+    console.log(12);
+    if(str[0] === PHONE_CHARS[0] && str[4] === PHONE_CHARS[1])
+    {
+      str.splice(4,1);
+      str.shift();
+      return str.every(x => parseInt(x));
+    }
+    else if(str[3]===PHONE_CHARS[2] && str[7]===PHONE_CHARS[2])
+    {
+      str.splice(3,1);
+      str.splice(6,1);
+      return str.every(x => parseInt(x));
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else if(str.length == 13)
+  {
+    //Must be 1xxx-xxx-xxxx
+    //OR 1(xxx)xxxxxxx
+    //OR (xxx)xxx-xxxx
+    console.log(13);
+    if(parseInt(str[0])===1)
+    {
+      return telephoneCheck(str.splice(1,12).join(""));
+    }
+    else if(str[0] === PHONE_CHARS[0] 
+    && str[4] == PHONE_CHARS[1] 
+    && str[8]== PHONE_CHARS[2]
+    )
+    {
+      str.splice(8,1);
+      str.splice(4,1);
+      str.shift();
+      return telephoneCheck(str.join(""));
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else if(str.length == 14)
+  {
+    //Must be 1(xxx)xxx-xxxx
+    console.log(14);
+    return parseInt(str[0])===1 && telephoneCheck(str.splice(1,13).join(""));
+  }
+}
+
+//console.log(telephoneCheck("555-555-5555"));
+//console.log(telephoneCheck("(6054756961)"));
+console.log("Sol: " + telephoneCheck("11 347-569-6111"));
