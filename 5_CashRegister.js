@@ -36,6 +36,13 @@ See below for an example of a cash-in-drawer array:
   ["ONE HUNDRED", 100]
 ]
 
+Tests
+Passed:checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]) should return an object.
+Passed:checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]) should return {status: "OPEN", change: [["QUARTER", 0.5]]}.
+Passed:checkCashRegister(3.26, 100, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]) should return {status: "OPEN", change: [["TWENTY", 60], ["TEN", 20], ["FIVE", 15], ["ONE", 1], ["QUARTER", 0.5], ["DIME", 0.2], ["PENNY", 0.04]]}.
+Passed:checkCashRegister(19.5, 20, [["PENNY", 0.01], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]) should return {status: "INSUFFICIENT_FUNDS", change: []}.
+Passed:checkCashRegister(19.5, 20, [["PENNY", 0.01], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 1], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]) should return {status: "INSUFFICIENT_FUNDS", change: []}.
+Failed:checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]) should return {status: "CLOSED", change: [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]}.
 
 */
 
@@ -90,19 +97,21 @@ function findMaxCurrKeyIndx(cash,cid,index=CURR_KEY.length-1)
   }
 }
 
-function completeTransaction(cash, cid, maxIndx, stageTotal)
+//function to collect change
+function completeTransaction(cash, cid, maxIndx, stageTotal, rtnArr)
 {
   cid[maxIndx][1] = cid[maxIndx][1].toFixed(2) - stageTotal;
+  rtnArr.push([CURR_KEY[maxIndx],stageTotal]);
   cash = cash - stageTotal;
   cash = cash.toFixed(2);
   if(cash > 0)
   {
-    return checkCID(cash, cid);
+    return checkCID(cash, cid,rtnArr);
     
   }
   else
   {
-    return [CURR_KEY[maxIndx],stageTotal];
+    return rtnArr;
   }
 }
 
@@ -114,7 +123,7 @@ function checkCID(cash, cid, rtnArr = [])
 
   //End if not available
   if(maxIndx === -1)
-    return {status: "INSUFFICIENT_FUNDS", change: []};
+    return null;
 
   //Total coins available in this stage
   let availableCoins = cid[maxIndx][1]/CURR_TABLE[cid[maxIndx][0]];
@@ -124,45 +133,52 @@ function checkCID(cash, cid, rtnArr = [])
 
   //if enough is in the till
   //do the math and recursivley go until we are out
-  //null out the return array if we dont have what they are looking for  
+  //null out the return array if we dont have what they are looking for 
   if(coinsNeeded <= availableCoins)
   {
     //use how many you want since we have more than you need
     let stageTotal = coinsNeeded*CURR_TABLE[CURR_KEY[maxIndx]];
-    rtnArr.push(completeTransaction(cash, cid, maxIndx, stageTotal));
+    completeTransaction(cash, cid, maxIndx, stageTotal,rtnArr);
+  }
+  else if(coinsNeeded >= availableCoins && maxIndx === 0)
+  {
+    return null;
   }
   else if(coinsNeeded >= availableCoins && availableCoins >= 1)
   {
+    console.log(coinsNeeded);
+    console.log(availableCoins);
+    console.log();
     //use available coins not how many you want
     let stageTotal = availableCoins*CURR_TABLE[CURR_KEY[maxIndx]];
-    rtnArr.push(completeTransaction(cash, cid, maxIndx, stageTotal));
+    completeTransaction(cash, cid, maxIndx, stageTotal,rtnArr);
   }
   else
   {
-    return [];
+    return null;
   }
+
   return rtnArr;
 }
 
 //Call Function
 function checkCashRegister(price, cash, cid) {
   let cashDiff = cash-price;
-  let myChange = [];
-
-  console.log("till total:  " + getTillTotal(cid).toFixed(2))
-
-  checkCID(cashDiff,cid,myChange);
-
-  console.log(myChange)
-
+  let myChange = checkCID(cashDiff,cid,myChange);
   let outPut = {
     status: "",
     change: myChange
   };
+
+  if(myChange == null)
+    outPut = {status: "INSUFFICIENT_FUNDS", change: []};
+  else
+    outPut.status = (getTillTotal(cid).toFixed(2)>0)? "OPEN" : "CLOSED" ;
+
   return outPut;
 }
 
 //checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]);
 
 console.log(
-checkCashRegister(19.5, 20, [["PENNY", 0.26], ["NICKEL", 0.00], ["DIME", 0.0], ["QUARTER", 0.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]));
+checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]));
