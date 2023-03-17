@@ -44,10 +44,9 @@ Passed:telephoneCheck("555)-555-5555") should return false.
 Passed:telephoneCheck("(555-555-5555") should return false.
 Passed:telephoneCheck("(555)5(55?)-5555") should return false.
 Passed:telephoneCheck("55 55-55-555-5") should return false.
-Failed:telephoneCheck("11 555-555-5555") should return false.
+Passed:telephoneCheck("11 555-555-5555") should return false.
 
 */
-
 const PHONE_CHARS = [
   '(',')','-'
 ];
@@ -126,7 +125,14 @@ function telephoneCheck(str) {
   {
     //Must be 1(xxx)xxx-xxxx
     console.log(14);
-    return parseInt(str[0])===1 && telephoneCheck(str.splice(1,13).join(""));
+    if(str[1]===PHONE_CHARS[0])
+    {
+      return parseInt(str[0])===1 && telephoneCheck(str.splice(1,13).join(""));
+    }
+    else
+    {
+      return false;
+    }
   }
 }
 
