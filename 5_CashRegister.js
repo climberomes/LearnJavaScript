@@ -42,7 +42,7 @@ Passed:checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 
 Passed:checkCashRegister(3.26, 100, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]) should return {status: "OPEN", change: [["TWENTY", 60], ["TEN", 20], ["FIVE", 15], ["ONE", 1], ["QUARTER", 0.5], ["DIME", 0.2], ["PENNY", 0.04]]}.
 Passed:checkCashRegister(19.5, 20, [["PENNY", 0.01], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]) should return {status: "INSUFFICIENT_FUNDS", change: []}.
 Passed:checkCashRegister(19.5, 20, [["PENNY", 0.01], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 1], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]) should return {status: "INSUFFICIENT_FUNDS", change: []}.
-Failed:checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]) should return {status: "CLOSED", change: [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]}.
+Passed:checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]) should return {status: "CLOSED", change: [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]}.
 
 */
 
@@ -97,7 +97,8 @@ function findMaxCurrKeyIndx(cash,cid,index=CURR_KEY.length-1)
   }
 }
 
-//function to collect change
+//add the remainder from till vs cash due back 
+// into the change output return array
 function completeTransaction(cash, cid, maxIndx, stageTotal, rtnArr)
 {
   cid[maxIndx][1] = cid[maxIndx][1].toFixed(2) - stageTotal;
@@ -146,9 +147,6 @@ function checkCID(cash, cid, rtnArr = [])
   }
   else if(coinsNeeded >= availableCoins && availableCoins >= 1)
   {
-    console.log(coinsNeeded);
-    console.log(availableCoins);
-    console.log();
     //use available coins not how many you want
     let stageTotal = availableCoins*CURR_TABLE[CURR_KEY[maxIndx]];
     completeTransaction(cash, cid, maxIndx, stageTotal,rtnArr);
@@ -161,24 +159,60 @@ function checkCID(cash, cid, rtnArr = [])
   return rtnArr;
 }
 
+//Adding this function since we have test case 
+// requirement to output zero values when till is closed
+function addZeroCurrency(cid, arrChange)
+{
+  let rtnArr = [...arrChange];
+
+  //arrChange cant be Null array
+  if(rtnArr)
+  {
+    for(let x of cid)
+    {
+      for(let y of rtnArr)
+      {
+        if(y.indexOf(x[0]) === -1)
+        {
+          arrChange.push(x);
+        }
+      }
+    }
+  }
+
+  return arrChange;
+}
+
 //Call Function
 function checkCashRegister(price, cash, cid) {
   let cashDiff = cash-price;
   let myChange = checkCID(cashDiff,cid,myChange);
+  
   let outPut = {
     status: "",
-    change: myChange
+    change: []
   };
-
-  if(myChange == null)
+  
+  if(myChange === null)
     outPut = {status: "INSUFFICIENT_FUNDS", change: []};
   else
     outPut.status = (getTillTotal(cid).toFixed(2)>0)? "OPEN" : "CLOSED" ;
+  
+  if(outPut.status === "CLOSED")
+    outPut.change = addZeroCurrency(cid, myChange);
+  else if(outPut.status === "OPEN")
+    outPut.change = myChange;
+
 
   return outPut;
 }
 
 //checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]]);
 
+//console.log(
+checkCashRegister(19.5, 20, [["PENNY", 0.50], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]
+);
+
 console.log(
-checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]));
+checkCashRegister(19.5, 20, [["PENNY", 0.01], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 1], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]])
+);
