@@ -1,2 +1,2 @@
 # LearnJavaScript
-Learning Java Script Project Data Base
+Learning Java Script course projects saved here
